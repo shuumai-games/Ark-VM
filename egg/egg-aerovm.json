@@ -182,7 +182,7 @@
             "name": "バナー",
             "description": "VM起動前に表示するカスタムバナー。改行（\\n）およびBashカラーコードに対応。",
             "env_variable": "BANNER",
-            "default_value": "",
+            "default_value": "\\033[1;36m   qWh    &WWWkf  fW,  ]W#    qW-    WW'WW     WW]\\n  1$:$r   $U   $M ($ |$*       M$   *$  $$$   &$$+\\n  $( !$!  $$$$$/  ($$8$:        $$ f$   ${%& 0$ $+\\n $o   q$' $U  '$q ($   $$        $w$f   ${ $$$  $+\\n}}     }} }~   ~},;}    [}'      '}}    }:  }' .}'\\033[0m\\n\\033[0;36m                  Powered by AeroVM & QEMU\\033[0m",
             "user_viewable": false,
             "user_editable": false,
             "rules": "nullable|string",
