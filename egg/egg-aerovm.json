@@ -5,28 +5,24 @@
         "update_url": null
     },
     "exported_at": "2026-06-23T00:00:00+00:00",
-    "name": "AeroVM",
-    "author": "aerovm@sosuku325.dev",
-    "description": "Pterodactyl向け軽量QEMUベースVM。無料・オープンソース。",
+    "name": "IZN VM",
+    "author": "contact@shuumai.dev",
+    "description": "Pterodactyl向け軽量QEMUベースVM! 無料・オープンソース。",
     "features": null,
     "docker_images": {
-        "Debian 12 — すぐに使える (推奨)": "ghcr.io/sosuku325/aerovm:guest-debian-12",
-        "Ubuntu 22.04 — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-ubuntu-22.04",
-        "Ubuntu 24.04 — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-ubuntu-24.04",
-        "Fedora — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-fedora",
-        "Arch Linux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-arch",
-        "Rocky Linux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-rockylinux",
-        "AlmaLinux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-almalinux",
-        "Alpine — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:alpine",
-        "Ubuntu 22.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-22.04",
-        "Ubuntu 24.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-24.04",
-        "Ubuntu 26.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-26.04"
+        "Debian 12 (推奨)": "ghcr.io/shuumai-games/aerovm:guest-debian-12",
+        "Ubuntu 22.04": "ghcr.io/shuumai-games/aerovm:guest-ubuntu-22.04",
+        "Ubuntu 24.04": "ghcr.io/shuumai-games/aerovm:guest-ubuntu-24.04",
+        "Fedora": "ghcr.io/shuumai-games/aerovm:guest-fedora",
+        "Arch Linux": "ghcr.io/shuumai-games/aerovm:guest-arch",
+        "Rocky Linux": "ghcr.io/shuumai-games/aerovm:guest-rockylinux",
+        "AlmaLinux": "ghcr.io/shuumai-games/aerovm:guest-almalinux"
     },
     "file_denylist": [],
     "startup": "/start.sh",
     "config": {
         "files": "{}",
-        "startup": "{\"done\": [\"AeroVMを起動しています\"]}",
+        "startup": "{\"done\": [\"IZN VMを起動しています\"]}",
         "logs": "{}",
         "stop": "^C"
     },
@@ -39,8 +35,8 @@
     },
     "variables": [
         {
-            "name": "VM RAM (MB)",
-            "description": "VMに割り当てるRAM量（MB単位）。Pterodactylのメモリリミットとは独立している。Cloud-init（すぐに使える）イメージは最低1024MB必要。ノードがソフトウェアエミュレーション下で動作している場合は2048MB以上を確保してください（初回起動がタイムアウトする可能性があります）。",
+            "name": "RAM (MB)",
+            "description": "VMに割り当てるRAM量（MB単位）。最低1024MB推奨。",
             "env_variable": "VM_RAM_MB",
             "default_value": "1024",
             "user_viewable": true,
@@ -49,8 +45,8 @@
             "field_type": "text"
         },
         {
-            "name": "VM CPUコア数",
-            "description": "VMに割り当てるvCPUコア数。ノードの物理コア数以下に設定してください。",
+            "name": "CPUコア数",
+            "description": "割り当てるvCPUコア数。ノードの物理コア数以下に設定してください。",
             "env_variable": "VM_CPU_CORES",
             "default_value": "2",
             "user_viewable": true,
@@ -59,8 +55,8 @@
             "field_type": "text"
         },
         {
-            "name": "VMディスクサイズ (GB)",
-            "description": "仮想ディスクイメージのサイズ（GB単位）。",
+            "name": "ディスクサイズ (GB)",
+            "description": "仮想ディスクイメージのサイズ（GB単位）",
             "env_variable": "VM_DISK_GB",
             "default_value": "20",
             "user_viewable": true,
