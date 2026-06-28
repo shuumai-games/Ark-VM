@@ -2,9 +2,9 @@
 
 # AeroVM
 
-[![License](https://img.shields.io/github/license/sosuku325/aerovm?style=for-the-badge)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/sosuku325/aerovm?style=for-the-badge)](https://github.com/sosuku325/aerovm/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/sosuku325/aerovm?style=for-the-badge)](https://github.com/sosuku325/aerovm/issues)
+[![License](https://img.shields.io/github/license/shuumai-games/Ark-VM?style=for-the-badge)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/shuumai-games/Ark-VM?style=for-the-badge)](https://github.com/shuumai-games/Ark-VM/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/shuumai-games/Ark-VM?style=for-the-badge)](https://github.com/shuumai-games/Ark-VM/issues)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/UaP8DpsDEK)
 
 **Pterodactyl 向け軽量・無料・オープンソースの QEMU ベース VM エッグ**
@@ -54,7 +54,7 @@ KVM なしでも動作します。KVM があればより高速になります。
 > ```
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/sosuku325/aerovm/main/wings-patch/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/shuumai-games/Ark-VM/main/wings-patch/install.sh)
 ```
 
 スクリプトの実行内容:
@@ -157,7 +157,7 @@ cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、clou
 
 ## イメージとバージョン
 
-すべてのイメージは `ghcr.io/sosuku325/aerovm:<タグ>` で公開されています。
+すべてのイメージは `ghcr.io/shuumai-games/aerovm:<タグ>` で公開されています。
 
 | タグ | ベースイメージ | バンドルされたゲスト OS |
 |-----|--------------|----------------------|
