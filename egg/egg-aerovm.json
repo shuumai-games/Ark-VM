@@ -7,32 +7,32 @@
     "exported_at": "2026-06-23T00:00:00+00:00",
     "name": "AeroVM",
     "author": "aerovm@sosuku325.dev",
-    "description": "Lightweight QEMU-based VM for Pterodactyl. Free and open source.",
+    "description": "Pterodactyl向け軽量QEMUベースVM。無料・オープンソース。",
     "features": null,
     "docker_images": {
-        "Debian 12 — ready to use (recommended)": "ghcr.io/sosuku325/aerovm:guest-debian-12",
-        "Ubuntu 22.04 — ready to use": "ghcr.io/sosuku325/aerovm:guest-ubuntu-22.04",
-        "Ubuntu 24.04 — ready to use": "ghcr.io/sosuku325/aerovm:guest-ubuntu-24.04",
-        "Fedora — ready to use": "ghcr.io/sosuku325/aerovm:guest-fedora",
-        "Arch Linux — ready to use": "ghcr.io/sosuku325/aerovm:guest-arch",
-        "Rocky Linux — ready to use": "ghcr.io/sosuku325/aerovm:guest-rockylinux",
-        "AlmaLinux — ready to use": "ghcr.io/sosuku325/aerovm:guest-almalinux",
-        "Alpine — BLANK disk, install your own OS (advanced)": "ghcr.io/sosuku325/aerovm:alpine",
-        "Ubuntu 22.04 LTS — BLANK disk, install your own OS (advanced)": "ghcr.io/sosuku325/aerovm:ubuntu-22.04",
-        "Ubuntu 24.04 LTS — BLANK disk, install your own OS (advanced)": "ghcr.io/sosuku325/aerovm:ubuntu-24.04",
-        "Ubuntu 26.04 LTS — BLANK disk, install your own OS (advanced)": "ghcr.io/sosuku325/aerovm:ubuntu-26.04"
+        "Debian 12 — すぐに使える (推奨)": "ghcr.io/sosuku325/aerovm:guest-debian-12",
+        "Ubuntu 22.04 — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-ubuntu-22.04",
+        "Ubuntu 24.04 — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-ubuntu-24.04",
+        "Fedora — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-fedora",
+        "Arch Linux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-arch",
+        "Rocky Linux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-rockylinux",
+        "AlmaLinux — すぐに使える": "ghcr.io/sosuku325/aerovm:guest-almalinux",
+        "Alpine — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:alpine",
+        "Ubuntu 22.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-22.04",
+        "Ubuntu 24.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-24.04",
+        "Ubuntu 26.04 LTS — 空ディスク、OSを自分でインストール (上級者向け)": "ghcr.io/sosuku325/aerovm:ubuntu-26.04"
     },
     "file_denylist": [],
     "startup": "/start.sh",
     "config": {
         "files": "{}",
-        "startup": "{\"done\": [\"Starting AeroVM\"]}",
+        "startup": "{\"done\": [\"AeroVMを起動しています\"]}",
         "logs": "{}",
         "stop": "^C"
     },
     "scripts": {
         "installation": {
-            "script": "#!/bin/sh\n# AeroVM has no install-time setup: the VM disk is created and provisioned\n# on first boot by /start.sh. This no-op just lets Pterodactyl mark the\n# server as successfully installed.\necho 'AeroVM: no installation steps required.'\nexit 0\n",
+            "script": "#!/bin/sh\n# AeroVM にインストール時のセットアップはありません。VMディスクの作成とプロビジョニングは\n# /start.sh による初回起動時に行われます。これはPterodactylにサーバーが\n# 正常にインストールされたと認識させるためのno-opです。\necho 'AeroVM: インストール手順は不要です。'\nexit 0\n",
             "container": "alpine:3.19",
             "entrypoint": "sh"
         }
@@ -40,7 +40,7 @@
     "variables": [
         {
             "name": "VM RAM (MB)",
-            "description": "Amount of RAM allocated to the VM in MB. Independent of Pterodactyl's memory limit. Cloud-init (ready-to-use) images need at least 1024 MB; allow 2048+ when the node runs under software emulation, or first boot can time out.",
+            "description": "VMに割り当てるRAM量（MB単位）。Pterodactylのメモリリミットとは独立している。Cloud-init（すぐに使える）イメージは最低1024MB必要。ノードがソフトウェアエミュレーション下で動作している場合は2048MB以上を確保してください（初回起動がタイムアウトする可能性があります）。",
             "env_variable": "VM_RAM_MB",
             "default_value": "1024",
             "user_viewable": true,
@@ -49,8 +49,8 @@
             "field_type": "text"
         },
         {
-            "name": "VM CPU Cores",
-            "description": "Number of vCPU cores allocated to the VM. Keep this at or below the physical core count of the node.",
+            "name": "VM CPUコア数",
+            "description": "VMに割り当てるvCPUコア数。ノードの物理コア数以下に設定してください。",
             "env_variable": "VM_CPU_CORES",
             "default_value": "2",
             "user_viewable": true,
@@ -59,8 +59,8 @@
             "field_type": "text"
         },
         {
-            "name": "VM Disk Size (GB)",
-            "description": "Size of the virtual disk image in GB.",
+            "name": "VMディスクサイズ (GB)",
+            "description": "仮想ディスクイメージのサイズ（GB単位）。",
             "env_variable": "VM_DISK_GB",
             "default_value": "20",
             "user_viewable": true,
@@ -69,8 +69,8 @@
             "field_type": "text"
         },
         {
-            "name": "Display Mode",
-            "description": "How to access the VM. ssh: console via Pterodactyl port. vnc: raw VNC (port 5900). novnc: browser-based VNC (port 6080). spice: SPICE protocol (port 5900). rdp: RDP (port 3389, cloud-init images only). none: headless. vnc/novnc/spice/rdp on a cloud-init image automatically install a desktop environment on first boot. vnc/novnc/spice/rdp all require their port to also be assigned as an Allocation in the panel.",
+            "name": "ディスプレイモード",
+            "description": "VMへのアクセス方法。ssh: Pterodactylポート経由でコンソールアクセス。vnc: 生VNC（ポート5900）。novnc: ブラウザベースのVNC（ポート6080）。spice: SPICEプロトコル（ポート5900）。rdp: RDP（ポート3389、cloud-initイメージのみ）。none: ヘッドレス。cloud-initイメージでvnc/novnc/spice/rdpを選ぶと、初回起動時にデスクトップ環境が自動インストールされます。vnc/novnc/spice/rdpはいずれもパネルでAllocationとしてポートを割り当てる必要があります。",
             "env_variable": "DISPLAY_MODE",
             "default_value": "ssh",
             "user_viewable": true,
@@ -79,8 +79,8 @@
             "field_type": "text"
         },
         {
-            "name": "KVM Acceleration",
-            "description": "auto (default): use hardware KVM on bare-metal nodes; if the node is itself a VM, automatically fall back to software emulation to avoid nested-KVM host panics. off: always software emulation. on: force KVM, required even when nested (only for hosts with stable nested virtualization; can crash the node otherwise).",
+            "name": "KVM アクセラレーション",
+            "description": "auto（デフォルト）: ベアメタルノードではハードウェアKVMを使用。ノード自体がVMの場合、ネストKVMによるホストパニックを避けるためソフトウェアエミュレーションに自動フォールバック。off: 常にソフトウェアエミュレーション。on: KVMを強制。ネスト環境でも有効にできますが、安定したネスト仮想化をサポートするホストのみ対応（それ以外ではノードがクラッシュする可能性あり）。",
             "env_variable": "KVM",
             "default_value": "auto",
             "user_viewable": true,
@@ -89,8 +89,8 @@
             "field_type": "text"
         },
         {
-            "name": "Additional Ports",
-            "description": "Extra ports to forward into the VM. These ports must also be assigned as Allocations in the Pterodactyl panel. Comma-separated. Use hostport-guestport or single port. Example: 8080-80,443",
+            "name": "追加ポート",
+            "description": "VMに転送する追加ポート。PterodactylパネルでAllocationとして割り当てておく必要があります。カンマ区切り。hostport-guestport または単一ポートで指定。例: 8080-80,443",
             "env_variable": "ADDITIONAL_PORTS",
             "default_value": "",
             "user_viewable": true,
@@ -99,8 +99,8 @@
             "field_type": "text"
         },
         {
-            "name": "Enable UEFI",
-            "description": "Boot the VM with UEFI firmware (OVMF). Disable for legacy BIOS.",
+            "name": "UEFI を有効にする",
+            "description": "UEFIファームウェア（OVMF）でVMを起動します。レガシーBIOSを使用する場合は無効にしてください。",
             "env_variable": "UEFI",
             "default_value": "0",
             "user_viewable": true,
@@ -109,8 +109,8 @@
             "field_type": "text"
         },
         {
-            "name": "Hostname",
-            "description": "Hostname for the guest OS. Only used by cloud-init images. Letters, numbers, and hyphens, up to 63 characters.",
+            "name": "ホスト名",
+            "description": "ゲストOSのホスト名。cloud-initイメージのみ使用。英字・数字・ハイフンのみ、最大63文字。",
             "env_variable": "OS_HOSTNAME",
             "default_value": "aerovm",
             "user_viewable": true,
@@ -119,8 +119,8 @@
             "field_type": "text"
         },
         {
-            "name": "Root Password",
-            "description": "Root/SSH password for the guest OS. Only used by cloud-init images. Leave blank to auto-generate a random password (printed to the console on first boot).",
+            "name": "rootパスワード",
+            "description": "ゲストOSのroot/SSHパスワード。cloud-initイメージのみ使用。空白のままにするとランダムパスワードが自動生成されます（初回起動時にコンソールに表示されます）。",
             "env_variable": "OS_PASSWORD",
             "default_value": "",
             "user_viewable": true,
@@ -129,8 +129,8 @@
             "field_type": "text"
         },
         {
-            "name": "Public SSH Key",
-            "description": "SSH public key for the guest OS. Only used by cloud-init images. If set, SSH password authentication is disabled.",
+            "name": "SSH 公開鍵",
+            "description": "ゲストOSのSSH公開鍵。cloud-initイメージのみ使用。設定するとSSHパスワード認証が無効になります。",
             "env_variable": "OS_PUBKEY",
             "default_value": "",
             "user_viewable": true,
@@ -139,8 +139,8 @@
             "field_type": "text"
         },
         {
-            "name": "Update Packages on Boot",
-            "description": "Update all packages on every boot. Only used by cloud-init images. May add startup time.",
+            "name": "起動時にパッケージを更新する",
+            "description": "起動のたびにすべてのパッケージを更新します。cloud-initイメージのみ使用。起動時間が長くなる場合があります。",
             "env_variable": "PACKAGE_UPDATE",
             "default_value": "0",
             "user_viewable": true,
@@ -149,8 +149,8 @@
             "field_type": "text"
         },
         {
-            "name": "IPv4 Port Forwarding",
-            "description": "disabled: only the primary SSH port is forwarded, Additional Ports is ignored. user: forward Additional Ports (default). all: also forward ports 1-1024; can noticeably slow down VM startup.",
+            "name": "IPv4 ポートフォワーディング",
+            "description": "disabled: プライマリSSHポートのみ転送され、追加ポートは無視されます。user: 追加ポートを転送します（デフォルト）。all: ポート1〜1024も転送します。VMの起動が著しく遅くなる場合があります。",
             "env_variable": "IPV4_MODE",
             "default_value": "user",
             "user_viewable": true,
@@ -159,8 +159,8 @@
             "field_type": "text"
         },
         {
-            "name": "Overwrite Host",
-            "description": "Overwrite the host/product name shown inside the VM (e.g. in neofetch, dmidecode). Leave blank to show QEMU's default. Must not contain commas or quotes.",
+            "name": "ホスト名の上書き",
+            "description": "VM内部に表示されるホスト名/製品名を上書きします（例: neofetch、dmidecodeなど）。空白のままにするとQEMUのデフォルトが表示されます。カンマや引用符は使用できません。",
             "env_variable": "OVERWRITE_HOST",
             "default_value": "",
             "user_viewable": false,
@@ -169,8 +169,8 @@
             "field_type": "text"
         },
         {
-            "name": "Overwrite IP",
-            "description": "Overwrite the host/IP shown in the vnc/novnc/spice/rdp connection info printed at startup. Useful when running behind a tunnel or reverse proxy.",
+            "name": "IPアドレスの上書き",
+            "description": "起動時に表示されるvnc/novnc/spice/rdp接続情報のホスト/IPを上書きします。トンネルやリバースプロキシの背後で動作している場合に便利です。",
             "env_variable": "OVERWRITE_IP",
             "default_value": "",
             "user_viewable": false,
@@ -179,8 +179,8 @@
             "field_type": "text"
         },
         {
-            "name": "Banner",
-            "description": "Custom banner printed before the VM starts. Supports newlines (\\n) and Bash color codes.",
+            "name": "バナー",
+            "description": "VM起動前に表示するカスタムバナー。改行（\\n）およびBashカラーコードに対応。",
             "env_variable": "BANNER",
             "default_value": "",
             "user_viewable": false,
