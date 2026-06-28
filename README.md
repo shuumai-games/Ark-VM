@@ -7,212 +7,212 @@
 [![GitHub Issues](https://img.shields.io/github/issues/sosuku325/aerovm?style=for-the-badge)](https://github.com/sosuku325/aerovm/issues)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/UaP8DpsDEK)
 
-**Lightweight, free, open-source QEMU-based VM egg for Pterodactyl**
+**Pterodactyl 向け軽量・無料・オープンソースの QEMU ベース VM エッグ**
 
-Works without KVM. Faster with KVM.
+KVM なしでも動作します。KVM があればより高速になります。
 
-[Quick Start](#quick-start) • [Variables](#egg-variables) • [Support](#support) • [Contributing](#contributing)
+[クイックスタート](#クイックスタート) • [変数一覧](#エッグ変数) • [サポート](#サポート) • [コントリビュート](#コントリビュート)
 
 </div>
 
 ---
 
-## Features
+## 特徴
 
-- **Free & open source** — no license keys, no paywalls
-- **KVM hybrid** — runs on software emulation by default; hardware acceleration when KVM is available
-- **Lightweight** — tuned QEMU flags (virtio disk/net, memory balloon); the Alpine blank-disk image is the smallest option
-- **Pterodactyl native** — one egg import, no panel modifications required
-- **Two ways to provision**: bring your own OS on a blank disk, or pick a cloud-init image (Debian, Ubuntu, Fedora, Arch, Rocky, AlmaLinux) that's ready to log into on first boot
-- **SSH, VNC, noVNC, SPICE, or RDP** — cloud-init images can auto-provision a lightweight desktop for the latter four
+- **無料・オープンソース** — ライセンスキー不要、ペイウォールなし
+- **KVM ハイブリッド** — デフォルトはソフトウェアエミュレーションで動作し、KVM が利用可能な場合はハードウェアアクセラレーションを使用
+- **軽量** — チューニング済みの QEMU フラグ（virtio ディスク/ネット、メモリバルーン）を使用。Alpine ブランクディスクイメージが最小サイズ
+- **Pterodactyl ネイティブ** — エッグを 1 つインポートするだけ。パネルの改変不要
+- **2 通りのプロビジョニング方法**: ブランクディスクに自前の OS を用意するか、初回起動時からログイン可能な cloud-init イメージ（Debian・Ubuntu・Fedora・Arch・Rocky・AlmaLinux）を選択
+- **SSH・VNC・noVNC・SPICE・RDP** — cloud-init イメージでは軽量デスクトップを自動プロビジョニング可能
 
-## Requirements
+## 動作要件
 
-| Component | Minimum |
-|-----------|---------|
+| コンポーネント | 最小バージョン |
+|--------------|-------------|
 | Pterodactyl Panel | 1.11.x |
-| Wings | v1.11.9+ (tested up to v1.13.0) |
-| Docker | 20.x+ |
-| Host OS | Linux (KVM-capable for acceleration) |
+| Wings | v1.11.9 以上（v1.13.0 まで動作確認済み） |
+| Docker | 20.x 以上 |
+| ホスト OS | Linux（アクセラレーションには KVM 対応が必要） |
 
-## Quick Start
+## クイックスタート
 
-**1. (Optional, recommended) Enable KVM on the node**
+**1. （任意・推奨）ノードで KVM を有効化**
 
-Run this once on each Wings node, before importing the egg, to get hardware-accelerated VMs. Without it, AeroVM still works, just slower (software emulation).
+ハードウェアアクセラレーション VM を使用するには、エッグをインポートする前に各 Wings ノードで以下を一度だけ実行してください。KVM がなくても AeroVM は動作しますが、低速（ソフトウェアエミュレーション）になります。
 
-**Prerequisites:** Wings v1.11.9 or newer, Go, and root access. The required Go version depends on the Wings release: **Go 1.21+** for Wings v1.11.x, **Go 1.24+** for v1.12.0 and newer (their `go.mod` requires it). The installer detects this and tells you which it needs.
+**前提条件:** Wings v1.11.9 以上、Go、root 権限が必要です。必要な Go のバージョンは Wings のリリースによって異なります。Wings v1.11.x には **Go 1.21 以上**、v1.12.0 以降には **Go 1.24 以上**（`go.mod` で要求されています）が必要です。インストーラーがこれを自動検出して案内します。
 
-> **Heads-up:** most distros package an older Go than Wings v1.12+ needs (Ubuntu 24, for example, ships Go 1.22). If the installer says your Go is too old, install a current Go and put it first on `PATH`, then re-run in the same shell:
+> **注意:** 多くのディストリビューションには Wings v1.12 以降が必要とするバージョンより古い Go がパッケージされています（例: Ubuntu 24 は Go 1.22 を同梱）。インストーラーが「Go が古い」と表示した場合は、最新の Go をインストールして `PATH` の先頭に追加し、同じシェルで再実行してください:
 >
 > ```bash
 > rm -rf /usr/local/go
-> curl -fsSL https://go.dev/dl/go1.24.0.linux-amd64.tar.gz -o /tmp/go.tar.gz   # arm64: swap amd64 -> arm64
+> curl -fsSL https://go.dev/dl/go1.24.0.linux-amd64.tar.gz -o /tmp/go.tar.gz   # arm64 の場合: amd64 -> arm64 に変更
 > tar -C /usr/local -xzf /tmp/go.tar.gz
 > export PATH=/usr/local/go/bin:$PATH
-> go version   # should report go1.24.0 (or newer)
+> go version   # go1.24.0（以上）と表示されることを確認
 > ```
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/sosuku325/aerovm/main/wings-patch/install.sh)
 ```
 
-The script will:
-1. Detect the installed Wings version (v1.11.9+ supported) and pick the matching patch + required Go version
-2. Build the patched Wings **before** stopping the service, so a build failure leaves your running Wings untouched
-3. Stop Wings, back up the current binary (`wings.bak.<timestamp>`), and install the patched build
-4. Set `/dev/kvm` permissions persistently (udev rule + group)
-5. Restart Wings (an EXIT-trap safety net restarts it even if a step fails midway)
+スクリプトの実行内容:
+1. インストール済みの Wings バージョン（v1.11.9 以上）を検出し、対応するパッチと必要な Go バージョンを選択
+2. サービスを停止する前にパッチ済み Wings をビルド（ビルド失敗時は既存の Wings に影響なし）
+3. Wings を停止し、現在のバイナリをバックアップ（`wings.bak.<タイムスタンプ>`）してパッチ済みバイナリをインストール
+4. `/dev/kvm` のパーミッションを永続的に設定（udev ルールとグループ）
+5. Wings を再起動（途中でエラーが発生しても EXIT トラップで再起動を保証）
 
-The patch itself adds a `/dev/kvm` device mapping to every server container and grants the container's process the host's `kvm` group, so guests can use hardware acceleration. `container.go` targets Wings v1.12+ (newer Docker SDK); `container_legacy.go` targets v1.11.x (older SDK) — the installer chooses automatically.
+パッチ自体は、すべてのサーバーコンテナに `/dev/kvm` デバイスマッピングを追加し、コンテナプロセスにホストの `kvm` グループを付与することで、ゲストがハードウェアアクセラレーションを利用できるようにします。`container.go` は Wings v1.12 以降（新しい Docker SDK）向け、`container_legacy.go` は v1.11.x（旧 Docker SDK）向けで、インストーラーが自動的に選択します。
 
-**To revert:**
+**元に戻す場合:**
 ```bash
-# Restore the backup created by install.sh
-cp /usr/local/bin/wings.bak.<timestamp> /usr/local/bin/wings
+# install.sh が作成したバックアップを復元
+cp /usr/local/bin/wings.bak.<タイムスタンプ> /usr/local/bin/wings
 rm /etc/udev/rules.d/99-aerovm-kvm.rules
 udevadm control --reload-rules
 systemctl restart wings
 ```
 
-**2. Download the egg**
+**2. エッグをダウンロード**
 
-Download [`egg-aerovm.json`](egg/egg-aerovm.json) from this repository.
+このリポジトリから [`egg-aerovm.json`](egg/egg-aerovm.json) をダウンロードしてください。
 
-**3. Import to Pterodactyl**
+**3. Pterodactyl にインポート**
 
-Navigate to **Admin → Nests → Import Egg** and upload the file.
+**管理画面 → Nests → エッグをインポート** からファイルをアップロードします。
 
-**4. Create a server**
+**4. サーバーを作成**
 
-Create a new server using the AeroVM egg, and pick a **Docker Image**:
+AeroVM エッグを使用して新しいサーバーを作成し、**Docker イメージ**を選択します:
 
-- **Blank disk** (Alpine, Ubuntu 22.04/24.04/26.04 LTS): an empty disk — you provide the OS yourself (e.g. by uploading a pre-made disk image over SFTP).
-- **Cloud-init** (Debian 12, Ubuntu 22.04, Ubuntu 24.04, Fedora, Arch Linux, Rocky Linux, AlmaLinux): the disk is pre-provisioned from the official cloud image and ready to log into on first boot — set `OS_HOSTNAME`/`OS_PASSWORD`/`OS_PUBKEY` to configure it. Setting `DISPLAY_MODE` to `vnc`/`novnc`/`spice`/`rdp` makes cloud-init install a desktop environment automatically (adds a few minutes to first boot).
+- **ブランクディスク**（Alpine、Ubuntu 22.04/24.04/26.04 LTS）: 空のディスクです。OS は自分で用意します（例: SFTP でディスクイメージをアップロード）。
+- **Cloud-init**（Debian 12、Ubuntu 22.04、Ubuntu 24.04、Fedora、Arch Linux、Rocky Linux、AlmaLinux）: 公式クラウドイメージからディスクが事前プロビジョニングされ、初回起動時からログイン可能です。`OS_HOSTNAME`・`OS_PASSWORD`・`OS_PUBKEY` で設定できます。`DISPLAY_MODE` を `vnc`/`novnc`/`spice`/`rdp` に設定すると、cloud-init が自動でデスクトップ環境をインストールします（初回起動に数分追加でかかります）。
 
-Configure RAM, CPU, and disk via the egg variables. Start the server — the VM will boot automatically, using KVM acceleration if step 1 was applied to that node.
+RAM、CPU、ディスクはエッグ変数で設定します。サーバーを起動すると VM が自動的に起動し、手順 1 を適用したノードでは KVM アクセラレーションが使用されます。
 
-> **Note:** `ADDITIONAL_PORTS` requires the ports to also be assigned as **Allocations** in the Pterodactyl panel. QEMU-side forwarding alone is not enough; Docker must also expose the port.
+> **注意:** `ADDITIONAL_PORTS` に指定するポートは、Pterodactyl パネルの**アロケーション**にも割り当てる必要があります。QEMU 側でポートフォワードするだけでは不十分で、Docker でもポートを公開する必要があります。
 
-## Egg Variables
+## エッグ変数
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VM_RAM_MB` | RAM allocated to the VM (MB). Cloud-init images need ≥ 1024; use 2048+ under software emulation | `1024` |
-| `VM_CPU_CORES` | vCPU cores (max 16). Use 2+ for cloud-init images | `2` |
-| `VM_DISK_GB` | Virtual disk size (GB) | `20` |
+| 変数 | 説明 | デフォルト |
+|------|------|----------|
+| `VM_RAM_MB` | VM に割り当てる RAM（MB）。cloud-init イメージには 1024 以上必要。ソフトウェアエミュレーション下では 2048 以上を推奨 | `1024` |
+| `VM_CPU_CORES` | 仮想 CPU コア数（最大 16）。cloud-init イメージには 2 以上を推奨 | `2` |
+| `VM_DISK_GB` | 仮想ディスクサイズ（GB） | `20` |
 | `DISPLAY_MODE` | `ssh` / `vnc` / `novnc` / `spice` / `rdp` / `none` | `ssh` |
-| `KVM` | `auto` (KVM on bare metal; software emulation if the node is itself a VM) / `off` (force software emulation) / `on` (force KVM, even nested) | `auto` |
-| `ADDITIONAL_PORTS` | Extra port forwards (e.g. `8080-80,443`) | — |
-| `UEFI` | Enable UEFI firmware (`0` or `1`) | `0` |
-| `OS_HOSTNAME` | Guest hostname (cloud-init images only) | `aerovm` |
-| `OS_PASSWORD` | Root/SSH password (cloud-init images only). Leave blank to auto-generate one (printed to the console on first boot) | — |
-| `OS_PUBKEY` | SSH public key (cloud-init images only). If set, password SSH login is disabled | — |
-| `PACKAGE_UPDATE` | Update packages on every boot (cloud-init images only, `0` or `1`) | `0` |
-| `IPV4_MODE` | `disabled` (ignore Additional Ports) / `user` (forward Additional Ports) / `all` (also forward ports 1-1024, slower startup) | `user` |
-| `OVERWRITE_HOST` | Overwrite the host/product name shown inside the VM (neofetch, dmidecode, etc.) | — |
-| `OVERWRITE_IP` | Overwrite the host/IP shown in the connection info printed at startup | — |
-| `BANNER` | Custom startup banner (`\n` and Bash color codes supported) | — |
+| `KVM` | `auto`（ベアメタルでは KVM 使用、ノード自体が VM の場合はソフトウェアエミュレーション）/ `off`（強制的にソフトウェアエミュレーション）/ `on`（ネステッドも含め強制的に KVM 使用） | `auto` |
+| `ADDITIONAL_PORTS` | 追加ポートフォワード（例: `8080-80,443`） | — |
+| `UEFI` | UEFI ファームウェアを有効化（`0` または `1`） | `0` |
+| `OS_HOSTNAME` | ゲストのホスト名（cloud-init イメージのみ） | `aerovm` |
+| `OS_PASSWORD` | root/SSH パスワード（cloud-init イメージのみ）。空白の場合は自動生成（初回起動時にコンソールに表示） | — |
+| `OS_PUBKEY` | SSH 公開鍵（cloud-init イメージのみ）。設定するとパスワードによる SSH ログインが無効になる | — |
+| `PACKAGE_UPDATE` | 毎回起動時にパッケージを更新（cloud-init イメージのみ、`0` または `1`） | `0` |
+| `IPV4_MODE` | `disabled`（追加ポートを無視）/ `user`（追加ポートをフォワード）/ `all`（ポート 1〜1024 もフォワード、起動が遅くなる） | `user` |
+| `OVERWRITE_HOST` | VM 内部に表示されるホスト名/製品名を上書き（neofetch、dmidecode 等） | — |
+| `OVERWRITE_IP` | 起動時に表示される接続情報の IP を上書き | — |
+| `BANNER` | カスタム起動バナー（`\n` および Bash カラーコード対応） | — |
 
-> `VM_RAM_MB` and `VM_CPU_CORES` are independent of Pterodactyl's resource limits. Set them to values your node can actually support.
+> `VM_RAM_MB` および `VM_CPU_CORES` は Pterodactyl のリソース制限とは独立しています。実際にノードがサポートできる値を設定してください。
 >
-> **First boot timing out / dropping to emergency mode?** The ready-to-use cloud-init images boot a full systemd userland and need more than the bare minimum, especially when the node runs the VM under software emulation (`KVM=off`, or `auto` on a nested node). Give the server at least **2048 MB RAM and 2 cores** — a starved VM can miss systemd's 90s device-detection timeout and drop to an emergency shell. On bare-metal nodes with real KVM, 1024 MB / 1 core is usually fine.
+> **初回起動がタイムアウトしたり緊急モードに落ちる場合:** 使用可能な cloud-init イメージは完全な systemd ユーザーランドを起動するため、最小スペック以上のリソースが必要です。特にノードがソフトウェアエミュレーション（`KVM=off`、またはネステッドノードの `auto`）で VM を実行している場合はなおさらです。**最低 2048 MB RAM と 2 コア**を割り当ててください。リソースが不足していると、VM が systemd の 90 秒のデバイス検出タイムアウトに間に合わず、緊急シェルに落ちることがあります。実 KVM を持つベアメタルノードであれば 1024 MB / 1 コアでも通常は問題ありません。
 >
-> `OS_HOSTNAME`/`OS_PASSWORD`/`OS_PUBKEY`/`PACKAGE_UPDATE` only have an effect on the cloud-init Docker images. The blank-disk images (Alpine/Ubuntu LTS) ignore them since there's no OS installed yet to configure.
+> `OS_HOSTNAME`・`OS_PASSWORD`・`OS_PUBKEY`・`PACKAGE_UPDATE` は cloud-init Docker イメージにのみ効果があります。ブランクディスクイメージ（Alpine/Ubuntu LTS）は OS がインストールされていないため、これらの設定は無視されます。
 >
-> **Pterodactyl "Disk Space"** (the container disk limit, in MiB) must be larger than `VM_DISK_GB` — the VM's `disk.qcow2` can grow up to `VM_DISK_GB`, and a server is stopped if it exceeds its Pterodactyl disk limit. For `VM_DISK_GB=20`, set Disk Space to ~`25000` MiB or `0` (unlimited).
+> **Pterodactyl の「ディスクスペース」**（コンテナのディスク容量制限、MiB 単位）は `VM_DISK_GB` より大きく設定する必要があります。VM の `disk.qcow2` は最大 `VM_DISK_GB` まで拡大可能であり、Pterodactyl のディスク制限を超えるとサーバーが停止します。`VM_DISK_GB=20` の場合は、ディスクスペースを `25000` MiB 以上、または `0`（無制限）に設定してください。
 
-> ⚠️ **Nested virtualization.** If your Pterodactyl **node is itself a virtual machine** (e.g. a VM from another VPS host), using hardware KVM inside it means *nested* virtualization, which on some hosts (notably certain AMD setups) is unstable and can **kernel-panic the whole node**. AeroVM guards against this: in the default `KVM=auto` mode it detects a virtualized node (via the CPU `hypervisor` flag) and automatically uses **software emulation** there, so it won't crash your node even with the KVM patch applied. Set `KVM=on` only to force nested KVM on a host you know supports it. On bare-metal nodes, `auto` uses KVM normally. Note: software emulation works but is **much slower** — heavy guests like Ubuntu Desktop are impractical without real KVM, so for performance run AeroVM on a bare-metal node.
+> **ネステッド仮想化に関する注意:** Pterodactyl **ノード自体が仮想マシン**（例: 他の VPS ホストの VM）上で動いている場合、その中でハードウェア KVM を使用すると「ネステッド仮想化」になります。一部のホスト（特定の AMD 環境など）ではこれが不安定で、**ノード全体がカーネルパニックを起こす**可能性があります。AeroVM にはこれに対する保護機能があります。デフォルトの `KVM=auto` モードでは CPU の `hypervisor` フラグによってノードの仮想化を検出し、自動的にソフトウェアエミュレーションを使用するため、KVM パッチを適用済みのノードでもクラッシュしません。ネステッド KVM を強制したい場合のみ `KVM=on` を設定してください（対応していることが確認済みのホストに限ります）。ベアメタルノードでは `auto` が通常どおり KVM を使用します。なお、ソフトウェアエミュレーションは動作しますが**大幅に低速**です。Ubuntu Desktop のような重いゲストは実際の KVM なしでは実用的ではないため、パフォーマンスを求める場合はベアメタルノードで AeroVM を実行してください。
 
-## Display Modes
+## ディスプレイモード
 
-| Mode | Description |
-|------|-------------|
-| `ssh` | SSH via the server's primary Pterodactyl port |
-| `vnc` | Raw VNC on port 5900 |
-| `novnc` | Browser-based VNC on port 6080 |
-| `spice` | SPICE protocol on port 5900 (connect with a native SPICE client) |
-| `rdp` | RDP on port 3389 — **cloud-init images only**, logs in as the `aerovm` user |
-| `none` | Headless — no display output |
+| モード | 説明 |
+|--------|------|
+| `ssh` | サーバーのメイン Pterodactyl ポートを経由した SSH |
+| `vnc` | ポート 5900 での生の VNC |
+| `novnc` | ポート 6080 でのブラウザベース VNC |
+| `spice` | ポート 5900 での SPICE プロトコル（ネイティブ SPICE クライアントで接続） |
+| `rdp` | ポート 3389 での RDP — **cloud-init イメージのみ**、`aerovm` ユーザーでログイン |
+| `none` | ヘッドレス — ディスプレイ出力なし |
 
-On a cloud-init image, choosing `vnc`/`novnc`/`spice`/`rdp` makes cloud-init install a lightweight XFCE desktop (and xrdp, for `rdp`) on first boot — this adds a few minutes before the desktop is usable. A dedicated `aerovm` sudo user (password: `OS_PASSWORD`) is created for the desktop session — `vnc`/`novnc`/`spice` auto-login as `aerovm`, and `rdp` prompts for it at connection time. On blank-disk images, `vnc`/`novnc`/`spice` just show the VM's console/installer screen (no OS to provision yet), and `rdp` isn't available.
+cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、cloud-init が初回起動時に軽量な XFCE デスクトップ（`rdp` の場合は xrdp も）をインストールします。デスクトップが使用可能になるまで数分かかります。デスクトップセッション用に `aerovm` sudo ユーザー（パスワード: `OS_PASSWORD`）が作成されます。`vnc`/`novnc`/`spice` では `aerovm` として自動ログインし、`rdp` では接続時にログイン情報の入力を求められます。ブランクディスクイメージでは `vnc`/`novnc`/`spice` は VM のコンソール/インストーラー画面を表示するだけで（まだ OS がありません）、`rdp` は利用できません。
 
-> **Note:** `vnc`/`spice` (port `5900`), `novnc` (port `6080`), and `rdp` (port `3389`) all need their port assigned as an **Allocation** in the Pterodactyl panel, the same as `ADDITIONAL_PORTS` — QEMU listening on the port isn't enough if Docker/Wings hasn't also exposed it.
+> **注意:** `vnc`/`spice`（ポート `5900`）、`novnc`（ポート `6080`）、`rdp`（ポート `3389`）はいずれも、`ADDITIONAL_PORTS` と同様に Pterodactyl パネルで**アロケーション**としてポートを割り当てる必要があります。QEMU がポートをリッスンするだけでは、Docker/Wings がポートを公開していなければ不十分です。
 
-## How It Works
+## 仕組み
 
-The container's entrypoint is [`scripts/start.sh`](scripts/start.sh), which runs every boot and builds the QEMU command line from the egg variables:
+コンテナのエントリポイントは [`scripts/start.sh`](scripts/start.sh) で、毎回の起動時に実行されてエッグ変数から QEMU コマンドラインを構築します:
 
-1. **Validate inputs** — integers are range-checked (and guarded against int64 overflow), `DISPLAY_MODE`/`IPV4_MODE` are checked against their allowed sets, the hostname against `[a-zA-Z0-9-]{1,63}`, and `OS_PASSWORD`/`OS_PUBKEY` are rejected if they contain newlines (they're embedded into cloud-init YAML).
-2. **Detect KVM** — if `/dev/kvm` is readable *and* writable, QEMU runs with `-enable-kvm -cpu host` and `aio=native`; otherwise it falls back to software emulation (`-cpu qemu64`, `aio=threads`). Either way the VM boots.
-3. **Provision the disk** (`/home/container/disk.qcow2`, persisted across reboots):
-   - *Blank-disk images*: create an empty `qcow2` of `VM_DISK_GB`.
-   - *Cloud-init images*: copy the bundled cloud image (`/opt/base-image/base.qcow2`) and grow it to `VM_DISK_GB` (skipped if that's smaller than the image's own size).
-4. **Build a cloud-init seed** (cloud-init images only) — a NoCloud `cidata` ISO (`meta-data` + `user-data`) is generated with `xorriso` and attached via `-cdrom`. It sets the hostname, the root password (`chpasswd`), an SSH key (if provided), and optional package upgrades. A random instance-id is persisted (`.cloud-init-instance-id`) so cloud-init doesn't re-run on later boots. For a graphical `DISPLAY_MODE` it also creates an `aerovm` sudo user for the desktop session and runs a `runcmd` that installs XFCE + LightDM (plus `spice-vdagent` or `xrdp`) using the package manager for the image's `CLOUD_OS_FAMILY` (`debian`/`fedora`/`rhel`/`arch`).
-5. **Set up networking** — QEMU user-mode networking with `hostfwd` rules: the primary Pterodactyl port → guest `22`, plus RDP `3389` (rdp mode), the `1-1024` range (`IPV4_MODE=all`), and `ADDITIONAL_PORTS`. Ports the display already uses (5900/6080) and duplicates are skipped.
-6. **Pick the display** — `ssh` uses the serial console (`-nographic -serial mon:stdio`); `vnc`/`novnc` use `-vga virtio` on VNC `:0` (5900), with `novnc` also launching a noVNC→VNC proxy on 6080; `spice` uses `-vga qxl` with `-spice`; `rdp`/`none` run headless.
-7. **Launch QEMU** — `exec qemu-system-x86_64` with virtio disk/net, a memory balloon, optional `-bios` (OVMF, when `UEFI` is on), and optional `-smbios` (when `OVERWRITE_HOST` is set).
+1. **入力値の検証** — 整数値は範囲チェック（int64 オーバーフロー対策済み）、`DISPLAY_MODE`/`IPV4_MODE` は許可値のセットと照合、ホスト名は `[a-zA-Z0-9-]{1,63}` に対して検証、`OS_PASSWORD`/`OS_PUBKEY` は改行が含まれていないか確認（cloud-init YAML に埋め込まれるため）。
+2. **KVM の検出** — `/dev/kvm` が読み書き可能な場合は `-enable-kvm -cpu host` と `aio=native` で QEMU を実行。それ以外はソフトウェアエミュレーション（`-cpu qemu64`、`aio=threads`）にフォールバック。どちらの場合でも VM は起動します。
+3. **ディスクのプロビジョニング**（`/home/container/disk.qcow2`、再起動をまたいで保持）:
+   - *ブランクディスクイメージ*: `VM_DISK_GB` サイズの空の `qcow2` を作成。
+   - *Cloud-init イメージ*: バンドルされたクラウドイメージ（`/opt/base-image/base.qcow2`）をコピーし、`VM_DISK_GB` まで拡張（イメージ自体のサイズより小さい場合はスキップ）。
+4. **cloud-init シードの構築**（cloud-init イメージのみ）— `xorriso` で NoCloud `cidata` ISO（`meta-data` + `user-data`）を生成して `-cdrom` で接続。ホスト名、root パスワード（`chpasswd`）、SSH キー（指定時）、オプションのパッケージ更新を設定。ランダムなインスタンス ID を保持（`.cloud-init-instance-id`）することで、次回起動時に cloud-init が再実行されないようにします。グラフィカルな `DISPLAY_MODE` の場合はデスクトップセッション用の `aerovm` sudo ユーザーも作成され、XFCE + LightDM のインストール（`rdp` の場合は `xrdp`、`spice` の場合は `spice-vdagent`）を `runcmd` で実行します（イメージの `CLOUD_OS_FAMILY` に応じたパッケージマネージャーを使用: `debian`/`fedora`/`rhel`/`arch`）。
+5. **ネットワークの設定** — QEMU のユーザーモードネットワーク（`hostfwd` ルール）: メインの Pterodactyl ポート → ゲストの `22`、RDP の `3389`（rdp モード）、ポート `1-1024` 範囲（`IPV4_MODE=all`）、`ADDITIONAL_PORTS`。ディスプレイが既に使用しているポート（5900/6080）と重複は除外。
+6. **ディスプレイの選択** — `ssh` はシリアルコンソール（`-nographic -serial mon:stdio`）を使用。`vnc`/`novnc` は VNC `:0`（5900）上の `-vga virtio` を使用し、`novnc` はさらに noVNC→VNC プロキシをポート 6080 で起動。`spice` は `-vga qxl` と `-spice` を使用。`rdp`/`none` はヘッドレスで実行。
+7. **QEMU の起動** — virtio ディスク/ネット、メモリバルーン、オプションの `-bios`（`UEFI` 有効時は OVMF）、オプションの `-smbios`（`OVERWRITE_HOST` 設定時）で `exec qemu-system-x86_64` を実行。
 
-**KVM on the node (optional patch).** Wings starts each server container with an explicit numeric `uid:gid`, which makes Docker ignore the image's own group memberships — so just adding the container user to a `kvm` group in the Dockerfile isn't enough. The patch in [`wings-patch/`](wings-patch/) makes Wings map `/dev/kvm` into the container and add the host's real `kvm` group GID via Docker's `GroupAdd`, so the guest can actually open the device.
+**ノードでの KVM（任意パッチ）.** Wings は各サーバーコンテナを明示的な数値 `uid:gid` で起動するため、Docker はイメージ自身のグループメンバーシップを無視します。そのため Dockerfile でコンテナユーザーを `kvm` グループに追加するだけでは不十分です。[`wings-patch/`](wings-patch/) のパッチは、Wings がコンテナに `/dev/kvm` をマッピングし、Docker の `GroupAdd` 経由でホストの実際の `kvm` グループ GID を付与するようにすることで、ゲストがデバイスを実際に開けるようにします。
 
-## Images & Versions
+## イメージとバージョン
 
-All images are published to `ghcr.io/sosuku325/aerovm:<tag>`.
+すべてのイメージは `ghcr.io/sosuku325/aerovm:<タグ>` で公開されています。
 
-| Tag | Base image | Bundled guest OS |
-|-----|-----------|------------------|
-| `alpine` | Alpine 3.19 | — (blank disk) |
-| `ubuntu-22.04` / `ubuntu-24.04` / `ubuntu-26.04` | Ubuntu LTS | — (blank disk) |
-| `guest-debian-12` | Alpine 3.19 | Debian 12 (bookworm) cloud image |
-| `guest-ubuntu-22.04` / `guest-ubuntu-24.04` | Alpine 3.19 | Ubuntu 22.04 (jammy) / 24.04 (noble) cloud image |
+| タグ | ベースイメージ | バンドルされたゲスト OS |
+|-----|--------------|----------------------|
+| `alpine` | Alpine 3.19 | なし（ブランクディスク） |
+| `ubuntu-22.04` / `ubuntu-24.04` / `ubuntu-26.04` | Ubuntu LTS | なし（ブランクディスク） |
+| `guest-debian-12` | Alpine 3.19 | Debian 12 (bookworm) クラウドイメージ |
+| `guest-ubuntu-22.04` / `guest-ubuntu-24.04` | Alpine 3.19 | Ubuntu 22.04 (jammy) / 24.04 (noble) クラウドイメージ |
 | `guest-fedora` | Alpine 3.19 | Fedora Cloud Base 44 |
-| `guest-arch` | Alpine 3.19 | Arch Linux (latest cloud image) |
+| `guest-arch` | Alpine 3.19 | Arch Linux（最新クラウドイメージ） |
 | `guest-rockylinux` / `guest-almalinux` | Alpine 3.19 | Rocky Linux 9 / AlmaLinux 9 GenericCloud |
 
-Cloud-init images bundle the official upstream `qcow2`/`img` at build time, so no extra download happens when a server is created. Desktop sessions use **XFCE4 + LightDM** (with **xrdp** for RDP, **spice-vdagent** for SPICE).
+cloud-init イメージはビルド時に公式の `qcow2`/`img` をバンドルするため、サーバー作成時に追加のダウンロードは発生しません。デスクトップセッションには **XFCE4 + LightDM**（RDP の場合は **xrdp**、SPICE の場合は **spice-vdagent**）を使用します。
 
-## Project Structure
+## プロジェクト構造
 
 ```
 AeroVM/
 ├── egg/
-│   └── egg-aerovm.json       # Pterodactyl egg (user-facing)
+│   └── egg-aerovm.json               # Pterodactyl エッグ（ユーザー向け）
 ├── docker/
-│   ├── Dockerfile.alpine               # Alpine-based image, blank disk (smallest)
-│   ├── Dockerfile.ubuntu-22.04         # Ubuntu 22.04 LTS image, blank disk
-│   ├── Dockerfile.ubuntu-24.04         # Ubuntu 24.04 LTS image, blank disk
-│   ├── Dockerfile.ubuntu-26.04         # Ubuntu 26.04 LTS image, blank disk
-│   ├── Dockerfile.guest-debian-12      # Debian 12 cloud image bundled, cloud-init
-│   ├── Dockerfile.guest-ubuntu-22.04   # Ubuntu 22.04 cloud image bundled, cloud-init
-│   ├── Dockerfile.guest-ubuntu-24.04   # Ubuntu 24.04 cloud image bundled, cloud-init
-│   ├── Dockerfile.guest-fedora         # Fedora Cloud image bundled, cloud-init
-│   ├── Dockerfile.guest-arch           # Arch Linux cloud image bundled, cloud-init
-│   ├── Dockerfile.guest-rockylinux     # Rocky Linux cloud image bundled, cloud-init
-│   └── Dockerfile.guest-almalinux      # AlmaLinux cloud image bundled, cloud-init
+│   ├── Dockerfile.alpine               # Alpine ベースイメージ、ブランクディスク（最軽量）
+│   ├── Dockerfile.ubuntu-22.04         # Ubuntu 22.04 LTS イメージ、ブランクディスク
+│   ├── Dockerfile.ubuntu-24.04         # Ubuntu 24.04 LTS イメージ、ブランクディスク
+│   ├── Dockerfile.ubuntu-26.04         # Ubuntu 26.04 LTS イメージ、ブランクディスク
+│   ├── Dockerfile.guest-debian-12      # Debian 12 クラウドイメージをバンドル、cloud-init 対応
+│   ├── Dockerfile.guest-ubuntu-22.04   # Ubuntu 22.04 クラウドイメージをバンドル、cloud-init 対応
+│   ├── Dockerfile.guest-ubuntu-24.04   # Ubuntu 24.04 クラウドイメージをバンドル、cloud-init 対応
+│   ├── Dockerfile.guest-fedora         # Fedora クラウドイメージをバンドル、cloud-init 対応
+│   ├── Dockerfile.guest-arch           # Arch Linux クラウドイメージをバンドル、cloud-init 対応
+│   ├── Dockerfile.guest-rockylinux     # Rocky Linux クラウドイメージをバンドル、cloud-init 対応
+│   └── Dockerfile.guest-almalinux      # AlmaLinux クラウドイメージをバンドル、cloud-init 対応
 ├── scripts/
-│   └── start.sh              # VM startup script
+│   └── start.sh                        # VM 起動スクリプト
 ├── wings-patch/
-│   ├── container.go          # Patched Wings file (KVM support), for Wings v1.12+
-│   ├── container_legacy.go   # Patched Wings file (KVM support), for Wings v1.11.x
-│   └── install.sh            # One-command KVM patch installer (auto-detects Wings version)
+│   ├── container.go                    # パッチ済み Wings ファイル（KVM 対応）Wings v1.12 以降用
+│   ├── container_legacy.go             # パッチ済み Wings ファイル（KVM 対応）Wings v1.11.x 用
+│   └── install.sh                      # ワンコマンドの KVM パッチインストーラー（Wings バージョン自動検出）
 ├── .github/workflows/
-│   └── build.yml             # Auto-build and push all images to ghcr.io
-└── .gitattributes            # Forces LF line endings (CRLF would break the shell scripts on Linux)
+│   └── build.yml                       # 全イメージを自動ビルドして ghcr.io にプッシュ
+└── .gitattributes                      # LF 改行コードを強制（CRLF は Linux 上でシェルスクリプトを壊す）
 ```
 
-## Support
+## サポート
 
-Questions, help, or feedback? Join the Discord: https://discord.gg/UaP8DpsDEK
+質問・ヘルプ・フィードバックは Discord へ: https://discord.gg/UaP8DpsDEK
 
-## Contributing
+## コントリビュート
 
-PRs and issues are welcome.
+PR・Issue 歓迎です。
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Open a pull request
+1. リポジトリをフォーク
+2. フィーチャーブランチを作成
+3. 変更をコミット
+4. プルリクエストを作成
 
-## License
+## ライセンス
 
-MIT — see [LICENSE](LICENSE)
+MIT — 詳細は [LICENSE](LICENSE) を参照してください
