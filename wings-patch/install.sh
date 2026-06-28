@@ -4,8 +4,8 @@ set -euo pipefail
 WINGS_BIN="/usr/local/bin/wings"
 WINGS_SERVICE="wings"
 WINGS_REPO="https://github.com/pterodactyl/wings"
-CONTAINER_GO_URL="https://raw.githubusercontent.com/sosuku325/aerovm/main/wings-patch/container.go"
-CONTAINER_GO_LEGACY_URL="https://raw.githubusercontent.com/sosuku325/aerovm/main/wings-patch/container_legacy.go"
+CONTAINER_GO_URL="https://raw.githubusercontent.com/shuumai-games/Ark-VM/main/wings-patch/container.go"
+CONTAINER_GO_LEGACY_URL="https://raw.githubusercontent.com/shuumai-games/Ark-VM/main/wings-patch/container_legacy.go"
 MIN_SUPPORTED_WINGS_VERSION="v1.11.9"
 
 # Wings v1.12.0 switched its pinned docker/docker SDK from v25 to v28, which
