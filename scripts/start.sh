@@ -46,7 +46,7 @@ SERVER_PORT="${SERVER_PORT:-2222}"
 DISPLAY_MODE="${DISPLAY_MODE:-ssh}"
 UEFI="${UEFI:-0}"
 ADDITIONAL_PORTS="${ADDITIONAL_PORTS:-}"
-OS_HOSTNAME="${OS_HOSTNAME:-aerovm}"
+OS_HOSTNAME="${OS_HOSTNAME:-arkvm}"
 OS_PASSWORD="${OS_PASSWORD:-}"
 OS_PUBKEY="${OS_PUBKEY:-}"
 PACKAGE_UPDATE="${PACKAGE_UPDATE:-0}"
@@ -274,7 +274,7 @@ if [ "$CLOUD_INIT_MODE" -eq 1 ]; then
     if [ -f "$INSTANCE_ID_FILE" ]; then
         instance_id="$(cat "$INSTANCE_ID_FILE")"
     else
-        instance_id="aerovm-$(tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)"
+        instance_id="arkvm-$(tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)"
         echo "$instance_id" > "$INSTANCE_ID_FILE"
     fi
 
@@ -304,8 +304,8 @@ if [ "$CLOUD_INIT_MODE" -eq 1 ]; then
     desktop_users_yaml=""
     desktop_chpasswd_yaml=""
     if [ "$needs_desktop" -eq 1 ]; then
-        desktop_users_yaml=$'  - name: aerovm\n    lock_passwd: false\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    shell: /bin/bash'
-        desktop_chpasswd_yaml="    - {name: aerovm, password: \"${password_esc}\", type: text}"
+        desktop_users_yaml=$'  - name: arkvm\n    lock_passwd: false\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    shell: /bin/bash'
+        desktop_chpasswd_yaml="    - {name: arkvm, password: \"${password_esc}\", type: text}"
         echo "INFO: DISPLAY_MODE=${DISPLAY_MODE} requires a desktop environment; cloud-init will install it on first boot (may take a few minutes)"
     fi
 
@@ -317,7 +317,7 @@ if [ "$CLOUD_INIT_MODE" -eq 1 ]; then
     write_files_yaml=""
     runcmd_body=""
     if [ "$pwauth" = "true" ]; then
-        write_files_yaml=$'write_files:\n  - path: /etc/ssh/sshd_config.d/99-aerovm.conf\n    content: |\n      PermitRootLogin yes\n      PasswordAuthentication yes'
+        write_files_yaml=$'write_files:\n  - path: /etc/ssh/sshd_config.d/99-arkvm.conf\n    content: |\n      PermitRootLogin yes\n      PasswordAuthentication yes'
         runcmd_body=$'  - sed -i \'s/^#*PermitRootLogin.*/PermitRootLogin yes/\' /etc/ssh/sshd_config\n  - systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || true'
     fi
     if [ "$needs_desktop" -eq 1 ]; then
@@ -479,7 +479,7 @@ display_host_ref="${OVERWRITE_IP:-${SERVER_IP:-$(hostname)}}"
 case "$DISPLAY_MODE" in
     novnc) echo "INFO: noVNC will be available at http://${display_host_ref}:${NOVNC_PORT}/vnc.html" ;;
     vnc|spice) echo "INFO: ${DISPLAY_MODE} will be available at ${display_host_ref}:5900" ;;
-    rdp) echo "INFO: RDP will be available at ${display_host_ref}:3389 (user: aerovm)" ;;
+    rdp) echo "INFO: RDP will be available at ${display_host_ref}:3389 (user: arkvm)" ;;
 esac
 
 [ "$DISPLAY_MODE" = "novnc" ] && start_novnc

@@ -189,8 +189,8 @@ set_kvm_permissions() {
         chgrp kvm /dev/kvm 2>/dev/null || true
         chmod 660 /dev/kvm
 
-        if ! grep -q 'KERNEL=="kvm"' /etc/udev/rules.d/99-aerovm-kvm.rules 2>/dev/null; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0660"' > /etc/udev/rules.d/99-aerovm-kvm.rules
+        if ! grep -q 'KERNEL=="kvm"' /etc/udev/rules.d/99-arkvm-kvm.rules 2>/dev/null; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0660"' > /etc/udev/rules.d/99-arkvm-kvm.rules
             udevadm control --reload-rules
             echo "INFO: KVM udev rules installed"
         fi
@@ -212,7 +212,7 @@ main() {
     start_wings
     echo ""
     echo "INFO: AeroVM Wings patch installed successfully"
-    echo "      To revert: restore the .bak binary and remove /etc/udev/rules.d/99-aerovm-kvm.rules"
+    echo "      To revert: restore the .bak binary and remove /etc/udev/rules.d/99-arkvm-kvm.rules"
 }
 
 main

@@ -70,14 +70,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/shuumai-games/Ark-VM/main/wi
 ```bash
 # install.sh が作成したバックアップを復元
 cp /usr/local/bin/wings.bak.<タイムスタンプ> /usr/local/bin/wings
-rm /etc/udev/rules.d/99-aerovm-kvm.rules
+rm /etc/udev/rules.d/99-arkvm-kvm.rules
 udevadm control --reload-rules
 systemctl restart wings
 ```
 
 **2. エッグをダウンロード**
 
-このリポジトリから [`egg-aerovm.json`](egg/egg-aerovm.json) をダウンロードしてください。
+このリポジトリから [`egg-arkvm.json`](egg/egg-arkvm.json) をダウンロードしてください。
 
 **3. Pterodactyl にインポート**
 
@@ -105,7 +105,7 @@ RAM、CPU、ディスクはエッグ変数で設定します。サーバーを�
 | `KVM` | `auto`（ベアメタルでは KVM 使用、ノード自体が VM の場合はソフトウェアエミュレーション）/ `off`（強制的にソフトウェアエミュレーション）/ `on`（ネステッドも含め強制的に KVM 使用） | `auto` |
 | `ADDITIONAL_PORTS` | 追加ポートフォワード（例: `8080-80,443`） | — |
 | `UEFI` | UEFI ファームウェアを有効化（`0` または `1`） | `0` |
-| `OS_HOSTNAME` | ゲストのホスト名（cloud-init イメージのみ） | `aerovm` |
+| `OS_HOSTNAME` | ゲストのホスト名（cloud-init イメージのみ） | `arkvm` |
 | `OS_PASSWORD` | root/SSH パスワード（cloud-init イメージのみ）。空白の場合は自動生成（初回起動時にコンソールに表示） | — |
 | `OS_PUBKEY` | SSH 公開鍵（cloud-init イメージのみ）。設定するとパスワードによる SSH ログインが無効になる | — |
 | `PACKAGE_UPDATE` | 毎回起動時にパッケージを更新（cloud-init イメージのみ、`0` または `1`） | `0` |
@@ -132,10 +132,10 @@ RAM、CPU、ディスクはエッグ変数で設定します。サーバーを�
 | `vnc` | ポート 5900 での生の VNC |
 | `novnc` | ポート 6080 でのブラウザベース VNC |
 | `spice` | ポート 5900 での SPICE プロトコル（ネイティブ SPICE クライアントで接続） |
-| `rdp` | ポート 3389 での RDP — **cloud-init イメージのみ**、`aerovm` ユーザーでログイン |
+| `rdp` | ポート 3389 での RDP — **cloud-init イメージのみ**、`arkvm` ユーザーでログイン |
 | `none` | ヘッドレス — ディスプレイ出力なし |
 
-cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、cloud-init が初回起動時に軽量な XFCE デスクトップ（`rdp` の場合は xrdp も）をインストールします。デスクトップが使用可能になるまで数分かかります。デスクトップセッション用に `aerovm` sudo ユーザー（パスワード: `OS_PASSWORD`）が作成されます。`vnc`/`novnc`/`spice` では `aerovm` として自動ログインし、`rdp` では接続時にログイン情報の入力を求められます。ブランクディスクイメージでは `vnc`/`novnc`/`spice` は VM のコンソール/インストーラー画面を表示するだけで（まだ OS がありません）、`rdp` は利用できません。
+cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、cloud-init が初回起動時に軽量な XFCE デスクトップ（`rdp` の場合は xrdp も）をインストールします。デスクトップが使用可能になるまで数分かかります。デスクトップセッション用に `arkvm` sudo ユーザー（パスワード: `OS_PASSWORD`）が作成されます。`vnc`/`novnc`/`spice` では `arkvm` として自動ログインし、`rdp` では接続時にログイン情報の入力を求められます。ブランクディスクイメージでは `vnc`/`novnc`/`spice` は VM のコンソール/インストーラー画面を表示するだけで（まだ OS がありません）、`rdp` は利用できません。
 
 > **注意:** `vnc`/`spice`（ポート `5900`）、`novnc`（ポート `6080`）、`rdp`（ポート `3389`）はいずれも、`ADDITIONAL_PORTS` と同様に Pterodactyl パネルで**アロケーション**としてポートを割り当てる必要があります。QEMU がポートをリッスンするだけでは、Docker/Wings がポートを公開していなければ不十分です。
 
@@ -148,7 +148,7 @@ cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、clou
 3. **ディスクのプロビジョニング**（`/home/container/disk.qcow2`、再起動をまたいで保持）:
    - *ブランクディスクイメージ*: `VM_DISK_GB` サイズの空の `qcow2` を作成。
    - *Cloud-init イメージ*: バンドルされたクラウドイメージ（`/opt/base-image/base.qcow2`）をコピーし、`VM_DISK_GB` まで拡張（イメージ自体のサイズより小さい場合はスキップ）。
-4. **cloud-init シードの構築**（cloud-init イメージのみ）— `xorriso` で NoCloud `cidata` ISO（`meta-data` + `user-data`）を生成して `-cdrom` で接続。ホスト名、root パスワード（`chpasswd`）、SSH キー（指定時）、オプションのパッケージ更新を設定。ランダムなインスタンス ID を保持（`.cloud-init-instance-id`）することで、次回起動時に cloud-init が再実行されないようにします。グラフィカルな `DISPLAY_MODE` の場合はデスクトップセッション用の `aerovm` sudo ユーザーも作成され、XFCE + LightDM のインストール（`rdp` の場合は `xrdp`、`spice` の場合は `spice-vdagent`）を `runcmd` で実行します（イメージの `CLOUD_OS_FAMILY` に応じたパッケージマネージャーを使用: `debian`/`fedora`/`rhel`/`arch`）。
+4. **cloud-init シードの構築**（cloud-init イメージのみ）— `xorriso` で NoCloud `cidata` ISO（`meta-data` + `user-data`）を生成して `-cdrom` で接続。ホスト名、root パスワード（`chpasswd`）、SSH キー（指定時）、オプションのパッケージ更新を設定。ランダムなインスタンス ID を保持（`.cloud-init-instance-id`）することで、次回起動時に cloud-init が再実行されないようにします。グラフィカルな `DISPLAY_MODE` の場合はデスクトップセッション用の `arkvm` sudo ユーザーも作成され、XFCE + LightDM のインストール（`rdp` の場合は `xrdp`、`spice` の場合は `spice-vdagent`）を `runcmd` で実行します（イメージの `CLOUD_OS_FAMILY` に応じたパッケージマネージャーを使用: `debian`/`fedora`/`rhel`/`arch`）。
 5. **ネットワークの設定** — QEMU のユーザーモードネットワーク（`hostfwd` ルール）: メインの Pterodactyl ポート → ゲストの `22`、RDP の `3389`（rdp モード）、ポート `1-1024` 範囲（`IPV4_MODE=all`）、`ADDITIONAL_PORTS`。ディスプレイが既に使用しているポート（5900/6080）と重複は除外。
 6. **ディスプレイの選択** — `ssh` はシリアルコンソール（`-nographic -serial mon:stdio`）を使用。`vnc`/`novnc` は VNC `:0`（5900）上の `-vga virtio` を使用し、`novnc` はさらに noVNC→VNC プロキシをポート 6080 で起動。`spice` は `-vga qxl` と `-spice` を使用。`rdp`/`none` はヘッドレスで実行。
 7. **QEMU の起動** — virtio ディスク/ネット、メモリバルーン、オプションの `-bios`（`UEFI` 有効時は OVMF）、オプションの `-smbios`（`OVERWRITE_HOST` 設定時）で `exec qemu-system-x86_64` を実行。
@@ -157,7 +157,7 @@ cloud-init イメージで `vnc`/`novnc`/`spice`/`rdp` を選択すると、clou
 
 ## イメージとバージョン
 
-すべてのイメージは `ghcr.io/shuumai-games/aerovm:<タグ>` で公開されています。
+すべてのイメージは `ghcr.io/shuumai-games/arkvm:<タグ>` で公開されています。
 
 | タグ | ベースイメージ | バンドルされたゲスト OS |
 |-----|--------------|----------------------|
@@ -176,7 +176,7 @@ cloud-init イメージはビルド時に公式の `qcow2`/`img` をバンドル
 ```
 AeroVM/
 ├── egg/
-│   └── egg-aerovm.json               # Pterodactyl エッグ（ユーザー向け）
+│   └── egg-arkvm.json               # Pterodactyl エッグ（ユーザー向け）
 ├── docker/
 │   ├── Dockerfile.alpine               # Alpine ベースイメージ、ブランクディスク（最軽量）
 │   ├── Dockerfile.ubuntu-22.04         # Ubuntu 22.04 LTS イメージ、ブランクディスク
